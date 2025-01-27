@@ -14,6 +14,7 @@ for (let char of alphabet) {
     character.innerText = char
 
     character.addEventListener("click", e => {
+        if (score < 1) return;
 
         if (!guessedCharacters.includes(character.innerText) ) {
 
@@ -34,6 +35,7 @@ for (let char of alphabet) {
                     message.innerText = `Congratulations! You won.`
                     newGameBtn.style.display = "block"
 
+
                 }
                 
             } else {
@@ -41,7 +43,7 @@ for (let char of alphabet) {
                 score--
                 scoreSpan.innerText = score
                 if (score === 0) {
-                    message.innerText = "Game OVER! YOU SUCK!!!"
+                    message.innerText = `Game OVER! The correct word was: ${word}`
                     newGameBtn.style.display = "block"
                 }
             }
@@ -53,83 +55,104 @@ for (let char of alphabet) {
 
     })
 
-    document.addEventListener("keypress", e => {
-        let key;
-        if (/[a-zA-ZäöüõšžÄÖÜÕŠŽ]/.test(e.key) && e.key.length === 1) {
-            key = e.key
-            if (!guessedCharacters.includes(key)) {
-            
-                guessedCharacters += key
+    alphabetDiv.appendChild(character)
+
+   
+
     
-                if (word.toLowerCase().includes(key.toLowerCase())) {
-                    message.innerText = `${key} is in word`
-                    let guessedWordArray = guessedWord.split('')
-                    for (let i = 0; i < word.length; i++) {
-                        if (key.toLowerCase() === word[i].toLowerCase()) {
-                            guessedWordArray[i] = key
-                            
-                        }
-                    }
-                    guessedWord = guessedWordArray.join('')
-                    guessedWordDiv.innerText = guessedWord
-                    if (guessedWord.toLowerCase().replace(/^\s+|\s+$/gm,'') == word.toLowerCase().replace(/^\s+|\s+$/gm,'')) {
-                        message.innerText = `Congratulations! You won.`
-                        newGameBtn.style.display = "block"
+}
+
+document.addEventListener("keydown", e => {
+    if (score < 1) return;
+
+    let key;
     
-                    }
-                    
-                } else {
-                    message.innerText = `${key} is not in word`
-                    score--
-                    scoreSpan.innerText = score
-                    if (score === 0) {
-                        message.innerText = "Game OVER! YOU SUCK!!!"
-                        newGameBtn.style.display = "block"
+    if (/[a-zA-ZäöüõšžÄÖÜÕŠŽ]/.test(e.key) && e.key.length === 1) {
+        key = e.key.toLowerCase()
+        if (!guessedCharacters.includes(key)) {
+        
+           
+
+            if (word.toLowerCase().includes(key.toLowerCase())) {
+                message.innerText = `${key} is in word`
+                let guessedWordArray = guessedWord.split('')
+                for (let i = 0; i < word.length; i++) {
+                    if (key.toLowerCase() === word[i].toLowerCase()) {
+                        guessedWordArray[i] = key
+                        
                     }
                 }
-    
-    
+                guessedWord = guessedWordArray.join('')
+                guessedWordDiv.innerText = guessedWord
+                if (guessedWord.toLowerCase().replace(/^\s+|\s+$/gm,'') == word.toLowerCase().replace(/^\s+|\s+$/gm,'')) {
+                    message.innerText = `Congratulations! You won.`
+
+                    newGameBtn.style.display = "block"
+
+                }
+                guessedCharacters += key.toLowerCase();
+                
+            } else {
+                message.innerText = `${key} is not in word`
+                score--
+                scoreSpan.innerText = score
+                if (score === 0) {
+                    message.innerText = `Game OVER! The correct word was: ${word}`
+
+                    newGameBtn.style.display = "block"
+                }
+                guessedCharacters += key.toLowerCase();
             }
-        } else {
+
+           
+
+        } else if (guessedCharacters.includes(key)){
             message.innerText = `You already guessed ${key}!!!!`
         }
-        
-    });
-
-    alphabetDiv.appendChild(character)
-}
+    }
+    
+});
 
 
 
 let score = 10;
 scoreSpan.innerText = score
 
-const wordsArray = [
-    "Aed", "Auto", "Puu", "Raamat", "Vesi", "Taev", "Maja", "Inimene", "Söök", "Jook",
-    "Lill", "Maal", "Tund", "Päev", "Õhtu", "Hommik", "Öö", "Keel", "Puu", "Tund",
-    "Lind", "Mere", "Kõik", "Jõgi", "Tee", "Linn", "Mets", "Vana", "Noorte", "Õpilane",
-    "Kool", "Arvuti", "Ülikool", "Töötama", "Kõndima", "Sõitma", "Ujuma", "Õppima", "Kuulma", "Nägema",
-    "Rõõm", "Kurbus", "Hirm", "Armastus", "Tervis", "Külm", "Soé", "Ilm", "Täht", "Pilv",
-    "Tuul", "Uus", "Vana", "Vaba", "Töö", "Palk", "Raha", "Tänav", "Keskkond", "Aega",
-    "Seiklus", "Üks", "Kaks", "Kolm", "Neli", "Viis", "Kuus", "Seitsme", "Kaheksa", "Üheksa",
-    "Kümme", "Sada", "Tuhat", "Täna", "Homme", "Eile", "Koer", "Kass", "Hobune", "Lehm",
-    "Lambad", "Siil", "Muld", "Kivim", "Rada", "Kuningas", "Empress", "Põld", "Väli", "Aken",
-    "Uks", "Läbi", "Üle", "Alla", "Kodu", "Rahu", "Õnn", "Tänan", "Palun", "Jaa"
-];
 
-let word = wordsArray[Math.floor(Math.random() * 101)]
+let wordsArray;
+let word;
 let guessedWord = '';
 
-for (let char of word) {
-    if ( char.toLowerCase() != char.toUpperCase()) {
-        guessedWord += '_'
-    } else {
-        guessedWord += char;
-    }
-   
-}
+fetch('hangman.txt')
+  .then(response => response.text())
+  .then(fileContents => {
+    wordsArray = fileContents.trim().split(/\s+/);
+    console.log(wordsArray);
+    console.log(wordsArray[Math.floor(Math.random() * (wordsArray.length + 1))])
+    word = String(wordsArray[Math.floor(Math.random() * (wordsArray.length + 1))])
 
-guessedWordDiv.innerText = guessedWord;
+
+    
+
+    for (let char of word) {
+        if ( char.toLowerCase() != char.toUpperCase()) {
+            guessedWord += '_'
+        } else {
+            guessedWord += char;
+        }
+   
+    }
+
+    guessedWordDiv.innerText = guessedWord;
+
+
+
+});
+
+
+
+
+
 
 console.log(guessedWord)
 
@@ -137,7 +160,7 @@ console.log(guessedWord)
 newGameBtn.addEventListener("click", e => {
     score = 10;
     scoreSpan.innerText = score
-
+    guessedCharacters = ""
     guessedWord = '';
     message.innerText = ''
     newGameBtn.style.display = "none"
